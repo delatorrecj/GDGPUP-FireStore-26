@@ -1,98 +1,74 @@
 import { Router } from "express";
-import fs from "fs";
 import render from "../render.js";
-import path from "path";
 import validateTask from "../middlewares/validateTask.js";
+
+// Import the collection reference
+import { todosRef } from "../app.js";
 
 const router = Router();
 
-// Fix __dirname for ES modules
-const __dirname = import.meta.dirname;
-
-// Path to our JSON storage file
-const todoFile = path.join(__dirname, "../", "todo.json");
-
-// Helper: read todos from file
-function readTodo() {
-  if (!fs.existsSync(todoFile)) return "Database Not found";
-  const data = fs.readFileSync(todoFile, "utf-8").trim();
-  if (!data) return [];
-  try {
-    const parsed = JSON.parse(data);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-// Helper: write todos to file
-function writeTodo(todos) {
-  fs.writeFileSync(todoFile, JSON.stringify(todos, null, 2));
-}
-
 // ROUTES
-
 // Index Route
-
 router.get("/", (req, res) => {
   res.sendFile(render("index.html"));
 });
 
-// Crud Operations (Static Routes)
-
-router.get("/todos", (req, res) => {
-  const todos = readTodo();
-  if (todos === "Database Not found")
-    res.status(500).json("Failed to fetch to database");
-  res.status(200).json(todos);
+// Get all todos
+router.get("/todos", async (req, res) => {
+  try {
+    const snapshot = await todosRef.get();
+    const todos = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    res.status(200).json(todos);
+  } catch (e) {
+    res.status(500).json({ error: "Failed to fetch from database" });
+  }
 });
 
-router.post("/todos", validateTask, (req, res) => {
-  const task = req.body.task;
+// New todo
+router.post("/todos", validateTask, async (req, res) => {
+  try {
+    const newTodo = {
+      task: req.body.task,
+      done: false,
+      createdAt: new Date().toISOString(),
+    };
 
-  const todos = readTodo();
-  if (todos === "Database Not found")
-    return res.status(500).json("Failed to fetch to database");
-
-  const newTodo = {
-    id: todos.length ? todos[todos.length - 1].id + 1 : 1,
-    task,
-    done: false,
-  };
-
-  todos.push(newTodo);
-  writeTodo(todos);
-  res.status(200).json(newTodo);
+    const docRef = await todosRef.add(newTodo);
+    res.status(201).json({ id: doc.id, ...newTodo });
+  } catch (e) {
+    res.status(500).json({ error: "Failed to create todo" });
+  }
 });
 
-// Dynamic Routes
+// Update todo
+router.patch("/todos/:id", validateTask, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = {};
 
-router.patch("/todos/:id", validateTask, (req, res) => {
-  const todos = readTodo();
-  if (todos === "Database Not found")
-    return res.status(500).json("Failed to fetch to database");
+    // Only update fields that were actually sent
+    if (req.body.task !== undefined) updateData.task = req.body.task;
+    if (req.body.done !== undefined) updateData.done = req.body.done;
 
-  const todo = todos.find((t) => t.id === parseInt(req.params.id));
-  if (!todo) return res.status(404).send("Todo not found");
-
-  todo.task = req.body.task ?? todo.task;
-  todo.done = req.body.done ?? todo.done;
-
-  writeTodo(todos);
-  res.status(200).json(todo);
+    await todosRef.doc(id).update(updateData);
+    res.status(200).json({ id, ...updateData });
+  } catch (e) {
+    res.status(404).json({ error: "Todo not found or update failed" });
+  }
 });
 
-router.delete("/todos/:id", (req, res) => {
-  let todos = readTodo();
-  if (todos === "Database Not found")
-    res.status(500).json("Failed to fetch to database");
-
-  const index = todos.findIndex((t) => t.id === parseInt(req.params.id));
-  if (index === -1) return res.status(404).send("Todo not found");
-
-  const deleted = todos.splice(index, 1);
-  writeTodo(todos);
-  res.status(200).json(deleted[0]);
+// Delete todo
+router.delete("/todos/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await todosRef.doc(id).delete();
+    res.status(200).json({ message: "Deleted successfully", id });
+  } catch (e) {
+    res.status(500).json({ error: "Delete failed" });
+  }
 });
 
 export default router;

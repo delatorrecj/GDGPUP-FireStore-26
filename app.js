@@ -1,22 +1,34 @@
 // Imports
 import express from "express";
 import route from "./routes/route.js";
+import { initializeApp, cert } from "firebase-admin/app";
+import fs from "fs";
 
 // Declaration && Initialization
 const app = express();
 const PORT = 3000;
 
-// Middlewares
+// Load the service account key
+const serviceAccount = JSON.parse(
+  fs.readFileSync(
+    new URL("./sj-6-firestore-firebase-adminsdk-fbsvc-61e29fa849.json"),
+  ),
+);
 
-// JSON parser (keep after logger so parse errors can still be correlated with req.id)
+// Initialize the firebase admin sdk
+initializeApp({
+  credential: cert(serviceAccount),
+});
+
 app.use(express.json());
-
-// serve static assets (css/js) from the views folder
 app.use(express.static("views"));
-
 app.use("/", route);
 
 // listen to the port
 app.listen(PORT, () => {
   console.log(`Server running in port ${PORT}`);
 });
+
+// Export db so it can be used in routes
+export const db = getFirestore();
+export const todosRef = db.collection("todos");
