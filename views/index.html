@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Todo List</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="index.css" />
+  </head>
+  <body>
+    <div class="bg-orb orb-blue" aria-hidden="true"></div>
+    <div class="bg-orb orb-red" aria-hidden="true"></div>
+    <div class="bg-orb orb-yellow" aria-hidden="true"></div>
+    <div class="bg-orb orb-green" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <div class="container header-inner">
+        <div style="display: flex; align-items: center; gap: 12px">
+          <a class="brand" href="/" aria-label="Home">
+            <svg
+              class="logo"
+              viewBox="0 0 100 100"
+              xmlns="http://www.w3.org/2000/svg"
+              role="img"
+            >
+              <defs>
+                <linearGradient id="g1" x1="0%" x2="100%">
+                  <stop offset="0%" stop-color="#4285f4" />
+                  <stop offset="33%" stop-color="#ea4335" />
+                  <stop offset="66%" stop-color="#fbbc05" />
+                  <stop offset="100%" stop-color="#34a853" />
+                </linearGradient>
+              </defs>
+              <circle cx="50" cy="50" r="45" fill="url(#g1)" />
+            </svg>
+          </a>
+          <div>
+            <h1 class="app-title">Todo List</h1>
+            <div style="font-size: 0.9rem; color: #6b7684">
+              GDG themed — plan your next sprint
+            </div>
+          </div>
+        </div>
+        <div style="font-size: 0.85rem; color: #6b7684">
+          Clean workflow • Lightweight • Focused
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section id="todo-app" class="container todo-app">
+        <div class="todo-panel">
+          <div class="panel-top">
+            <h2>Plan your next sprint</h2>
+            <p>Clean workflow with a GDG inspired look.</p>
+          </div>
+
+          <div id="errorBox" class="error-box hidden" role="alert"></div>
+
+          <form id="todoForm" class="todo-form">
+            <input
+              id="todoInput"
+              maxlength="160"
+              placeholder="Add a task (example: Prepare API demo)"
+              aria-label="New todo"
+            />
+            <button class="btn primary" type="submit">Add</button>
+          </form>
+
+          <div class="toolbar">
+            <div
+              class="filter-group"
+              id="filterGroup"
+              role="tablist"
+              aria-label="Todo filters"
+            >
+              <button class="chip active" type="button" data-filter="all">
+                All
+              </button>
+              <button class="chip" type="button" data-filter="active">
+                Active
+              </button>
+              <button class="chip" type="button" data-filter="done">
+                Completed
+              </button>
+            </div>
+            <button id="clearDoneBtn" class="btn ghost" type="button">
+              Clear completed
+            </button>
+          </div>
+
+          <ul id="todoList" class="todo-list" aria-live="polite"></ul>
+
+          <div class="todo-summary">
+            <span id="summaryText">0 items</span>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer style="padding: 12px 0; color: var(--muted); font-size: 0.9rem">
+      <div
+        class="container"
+        style="display: flex; justify-content: flex-start; align-items: center"
+      >
+        <div>Made with ❤️ for GDG-style demos</div>
+      </div>
+    </footer>
+
+    <script src="index.js"></script>
+  </body>
+</html>

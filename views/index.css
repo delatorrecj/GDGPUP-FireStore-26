@@ -1,0 +1,441 @@
+/* Clean GDG-themed stylesheet
+   Consolidated rules to avoid duplication and conflicts.
+   Fixes: button sizes, icon button labels, overflow, spacing. */
+
+:root {
+  --gdg-blue: #4285f4;
+  --gdg-red: #ea4335;
+  --gdg-yellow: #fbbc05;
+  --gdg-green: #34a853;
+  --bg: #f6fbff;
+  --surface: #ffffff;
+  --muted: #6b7684;
+  --text: #0f1720;
+  --card-shadow: 0 12px 30px rgba(15, 98, 255, 0.08);
+  --radius-lg: 18px;
+  --radius-md: 10px;
+  --container: 1100px;
+  --header-h: 64px;
+  --footer-h: 44px;
+}
+
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  height: 100%;
+  overflow-x: hidden;
+}
+body {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Arial,
+    sans-serif;
+  color: var(--text);
+  background: linear-gradient(180deg, var(--bg), #eef6ff);
+  -webkit-font-smoothing: antialiased;
+}
+
+.container {
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* decorative orbs */
+.bg-orb {
+  position: fixed;
+  border-radius: 999px;
+  pointer-events: none;
+  z-index: -1;
+}
+.orb-blue {
+  width: 680px;
+  height: 680px;
+  left: -220px;
+  top: -220px;
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(66, 133, 244, 0.98) 0 48%,
+    rgba(66, 133, 244, 0.86) 49% 55%,
+    transparent 60%
+  );
+}
+.orb-red {
+  width: 220px;
+  height: 220px;
+  right: 6%;
+  top: 8%;
+  background: radial-gradient(
+    circle,
+    rgba(234, 67, 53, 0.95),
+    rgba(234, 67, 53, 0.7)
+  );
+}
+.orb-yellow {
+  width: 160px;
+  height: 160px;
+  right: -20px;
+  bottom: 14%;
+  background: radial-gradient(
+    circle,
+    rgba(251, 188, 5, 0.9),
+    rgba(251, 188, 5, 0.6)
+  );
+}
+.orb-green {
+  width: 200px;
+  height: 200px;
+  left: 6%;
+  bottom: -40px;
+  background: radial-gradient(
+    circle,
+    rgba(52, 168, 83, 0.9),
+    rgba(52, 168, 83, 0.6)
+  );
+}
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(6px);
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+}
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 0 20px;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+}
+.logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  box-shadow: 0 10px 30px rgba(66, 133, 244, 0.16);
+}
+.app-title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--gdg-blue);
+  margin: 0;
+}
+
+.main-center-helper {
+  height: 0;
+} /* helper for old layouts */
+.main-center-helper {
+  height: 0;
+} /* helper for old layouts */
+main {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 12px 0;
+}
+.todo-app {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.todo-panel {
+  width: 100%;
+  max-width: 920px;
+  background: linear-gradient(180deg, var(--surface), #fbfdff);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--card-shadow);
+  border: 1px solid rgba(12, 40, 90, 0.04);
+  padding: 16px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  /* Keep panel within the viewport: subtract header/footer + a little breathing room */
+  max-height: calc(100vh - var(--header-h) - var(--footer-h) - 48px);
+  overflow: hidden;
+}
+.todo-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 6px;
+  background: linear-gradient(
+    90deg,
+    var(--gdg-blue) 0 25%,
+    var(--gdg-red) 25% 50%,
+    var(--gdg-yellow) 50% 75%,
+    var(--gdg-green) 75% 100%
+  );
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
+}
+
+.panel-top {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.panel-top h2 {
+  margin: 0;
+  font-size: 1.45rem;
+}
+.panel-top p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.error-box {
+  display: none;
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(234, 67, 53, 0.06);
+  color: #9b2a2a;
+  border: 1px solid rgba(234, 67, 53, 0.12);
+  margin-top: 12px;
+}
+.error-box.show {
+  display: block;
+}
+
+.todo-form {
+  display: flex;
+  gap: 12px;
+  margin: 18px 0;
+}
+.todo-form input {
+  flex: 1;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(12, 40, 90, 0.06);
+  font-size: 1rem;
+  min-width: 0;
+}
+.todo-form input:focus {
+  outline: none;
+  box-shadow: 0 6px 18px rgba(66, 133, 244, 0.12);
+  border-color: var(--gdg-blue);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn.primary {
+  background: linear-gradient(90deg, var(--gdg-blue), #6ea8ff);
+  color: #fff;
+  min-width: 64px;
+}
+.btn.ghost {
+  background: transparent;
+  border: 1px solid rgba(12, 40, 90, 0.06);
+  color: var(--gdg-blue);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.filter-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.chip {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid rgba(12, 40, 90, 0.06);
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--muted);
+}
+.chip.active {
+  background: linear-gradient(90deg, var(--gdg-blue), #6ea8ff);
+  color: #fff;
+  border-color: transparent;
+}
+
+.todo-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+  flex: 1;
+  overflow: auto;
+}
+.todo-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid rgba(12, 40, 90, 0.04);
+  align-items: center;
+  min-width: 0;
+}
+.todo-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.todo-check {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: var(--gdg-green);
+}
+.todo-text {
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.todo-item.done .todo-text {
+  color: var(--muted);
+  text-decoration: line-through;
+  font-weight: 600;
+}
+
+.todo-edit {
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(12, 40, 90, 0.06);
+  width: 100%;
+}
+.todo-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(12, 40, 90, 0.06);
+  background: #fff;
+  color: var(--gdg-blue);
+  cursor: pointer;
+  font-weight: 700;
+}
+.icon-btn:hover {
+  box-shadow: 0 6px 18px rgba(66, 133, 244, 0.06);
+  border-color: rgba(66, 133, 244, 0.3);
+}
+
+.empty {
+  text-align: center;
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px dashed rgba(12, 40, 90, 0.06);
+  color: var(--muted);
+}
+.todo-summary {
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 0.94rem;
+}
+
+/* Fix horizontal scroll inside items */
+.todo-list::-webkit-scrollbar {
+  height: 10px;
+}
+.todo-item * {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 720px) {
+  .todo-form {
+    flex-direction: column;
+  }
+  .toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .todo-item {
+    grid-template-columns: 1fr;
+  }
+  .todo-text {
+    white-space: normal;
+  }
+}
+
+/* Ensure decorative orbs never introduce scroll */
+.bg-orb {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* small utility */
+.hidden {
+  display: none;
+}
+
+footer {
+  height: var(--footer-h);
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background: transparent;
+}
+
+@media (max-height: 700px) {
+  :root {
+    --header-h: 56px;
+    --footer-h: 36px;
+  }
+  .logo {
+    width: 48px;
+    height: 48px;
+  }
+  .orb-blue {
+    transform: scale(0.8);
+  }
+  .todo-panel {
+    padding: 12px;
+  }
+}
