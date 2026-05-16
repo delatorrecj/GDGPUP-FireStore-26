@@ -402,12 +402,85 @@ main {
   .todo-text {
     white-space: normal;
   }
+  .auth-form {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .auth-form input,
+  .auth-form button {
+    width: 100%;
+    min-width: unset;
+  }
 }
+
 
 /* Ensure decorative orbs never introduce scroll */
 .bg-orb {
   will-change: transform;
   transform: translateZ(0);
+}
+
+/* Auth section and login panel styles */
+.auth-section {
+  padding: 0 20px;
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+
+.auth-panel {
+  background: linear-gradient(180deg, var(--surface), #fbfdff);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--card-shadow);
+  border: 1px solid rgba(12, 40, 90, 0.04);
+  padding: 16px;
+  position: relative;
+}
+
+.auth-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    var(--gdg-blue) 0 25%,
+    var(--gdg-red) 25% 50%,
+    var(--gdg-yellow) 50% 75%,
+    var(--gdg-green) 75% 100%
+  );
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
+}
+
+.auth-form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.auth-form input {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(12, 40, 90, 0.06);
+  font-size: 0.95rem;
+  font-family: inherit;
+  min-width: 140px;
+}
+
+.auth-form input:focus {
+  outline: none;
+  box-shadow: 0 4px 12px rgba(66, 133, 244, 0.12);
+  border-color: var(--gdg-blue);
+}
+
+.auth-form input::placeholder {
+  color: var(--muted);
+}
+
+#userStatus {
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 /* small utility */

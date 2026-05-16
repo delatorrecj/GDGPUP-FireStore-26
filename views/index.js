@@ -1,47 +1,125 @@
 // Cleaned client-side todo app (GDG-themed UI)
 const state = { todos: [], filter: "all" };
 
+// --- Auth integration and API handling ---
+const authEnabled = typeof firebase !== "undefined" && window.FIREBASE_CONFIG;
+if (authEnabled) {
+  try {
+    if (!firebase.apps || !firebase.apps.length) firebase.initializeApp(window.FIREBASE_CONFIG);
+  } catch (e) {
+    console.warn("Firebase init failed:", e);
+  }
+}
+
+async function getIdTokenForRequest() {
+  if (authEnabled && firebase.auth().currentUser) {
+    try {
+      return await firebase.auth().currentUser.getIdToken();
+    } catch (e) {
+      console.warn("Failed to get id token:", e);
+      return null;
+    }
+  }
+  return null;
+}
+
+async function authFetch(url, opts = {}) {
+  const headers = new Headers(opts.headers || {});
+  const token = await getIdTokenForRequest();
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  const res = await fetch(url, { ...opts, headers });
+  return res;
+}
+
+// Use localStorage for anonymous todos (lost on refresh), Firestore for authenticated
+const ANON_STORAGE_KEY = "gdg_anon_todos";
+
 const api = {
-  list: () =>
-    fetch("/todos").then(async (r) => {
+  list: async () => {
+    if (authEnabled && firebase.auth().currentUser) {
+      // Authenticated: fetch from server (Firestore)
+      const r = await authFetch("/todos");
       if (!r.ok) {
         const body = await r.json().catch(() => null);
         throw new Error(body?.error || body?.message || "Failed to load");
       }
       return r.json();
-    }),
-  create: (task) =>
-    fetch("/todos", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ task }),
-    }).then(async (r) => {
+    } else {
+      // Anonymous: load from localStorage
+      const stored = localStorage.getItem(ANON_STORAGE_KEY);
+      return stored ? JSON.parse(stored) : [];
+    }
+  },
+  create: async (task) => {
+    if (authEnabled && firebase.auth().currentUser) {
+      // Authenticated: save to server (Firestore)
+      const r = await authFetch("/todos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ task }),
+      });
       if (!r.ok) {
         const body = await r.json().catch(() => null);
         throw new Error(body?.error || body?.message || "Create failed");
       }
       return r.json();
-    }),
-  update: (id, body) =>
-    fetch(`/todos/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    }).then(async (r) => {
+    } else {
+      // Anonymous: save to localStorage
+      const todos = JSON.parse(localStorage.getItem(ANON_STORAGE_KEY) || "[]");
+      const newTodo = {
+        id: "anon-" + Date.now() + "-" + Math.random().toString(36).slice(2, 9),
+        task,
+        done: false,
+        createdAt: new Date().toISOString(),
+      };
+      todos.push(newTodo);
+      localStorage.setItem(ANON_STORAGE_KEY, JSON.stringify(todos));
+      return newTodo;
+    }
+  },
+  update: async (id, body) => {
+    if (authEnabled && firebase.auth().currentUser) {
+      // Authenticated: update on server (Firestore)
+      const r = await authFetch(`/todos/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
       if (!r.ok) {
         const body = await r.json().catch(() => null);
         throw new Error(body?.error || body?.message || "Update failed");
       }
       return r.json();
-    }),
-  remove: (id) =>
-    fetch(`/todos/${id}`, { method: "DELETE" }).then(async (r) => {
+    } else {
+      // Anonymous: update in localStorage
+      const todos = JSON.parse(localStorage.getItem(ANON_STORAGE_KEY) || "[]");
+      const todo = todos.find((t) => t.id === id);
+      if (!todo) throw new Error("Todo not found");
+      if (body.task !== undefined) todo.task = body.task;
+      if (body.done !== undefined) todo.done = body.done;
+      localStorage.setItem(ANON_STORAGE_KEY, JSON.stringify(todos));
+      return todo;
+    }
+  },
+  remove: async (id) => {
+    if (authEnabled && firebase.auth().currentUser) {
+      // Authenticated: delete from server (Firestore)
+      const r = await authFetch(`/todos/${id}`, { method: "DELETE" });
       if (!r.ok) {
         const body = await r.json().catch(() => null);
         throw new Error(body?.error || body?.message || "Delete failed");
       }
       return r.json();
-    }),
+    } else {
+      // Anonymous: delete from localStorage
+      const todos = JSON.parse(localStorage.getItem(ANON_STORAGE_KEY) || "[]");
+      const index = todos.findIndex((t) => t.id === id);
+      if (index === -1) throw new Error("Todo not found");
+      todos.splice(index, 1);
+      localStorage.setItem(ANON_STORAGE_KEY, JSON.stringify(todos));
+      return { message: "Deleted", id };
+    }
+  },
 };
 
 const qs = (s, root = document) => root.querySelector(s);
@@ -248,5 +326,70 @@ document.addEventListener("DOMContentLoaded", () => {
     .forEach((b) =>
       b.addEventListener("click", () => setFilter(b.dataset.filter)),
     );
+
+  // Auth UI bindings
+  const loginForm = qs("#loginForm");
+  const emailInput = qs("#emailInput");
+  const passwordInput = qs("#passwordInput");
+  const signUpBtn = qs("#signUpBtn");
+  const signOutBtn = qs("#signOutBtn");
+  const userStatus = qs("#userStatus");
+
+  function updateAuthUI(user) {
+    if (user) {
+      userStatus.textContent = `Signed in as ${user.email || user.uid}`;
+      loginForm?.classList?.add("hidden");
+      signOutBtn?.classList?.remove("hidden");
+    } else {
+      userStatus.textContent = authEnabled ? "Not signed in" : "No Firebase config (see firebase-config.js)";
+      loginForm?.classList?.remove("hidden");
+      signOutBtn?.classList?.add("hidden");
+    }
+  }
+
+  if (authEnabled) {
+    firebase.auth().onAuthStateChanged((user) => {
+      updateAuthUI(user);
+      // Clear anonymous localStorage when signing in/out
+      localStorage.removeItem(ANON_STORAGE_KEY);
+      if (user) refresh();
+    });
+
+    loginForm?.addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      try {
+        clearError();
+        const email = emailInput.value;
+        const pass = passwordInput.value;
+        await firebase.auth().signInWithEmailAndPassword(email, pass);
+      } catch (err) {
+        showError(err.message || String(err));
+      }
+    });
+
+    signUpBtn?.addEventListener("click", async () => {
+      try {
+        clearError();
+        const email = emailInput.value;
+        const pass = passwordInput.value;
+        await firebase.auth().createUserWithEmailAndPassword(email, pass);
+      } catch (err) {
+        showError(err.message || String(err));
+      }
+    });
+
+    signOutBtn?.addEventListener("click", async () => {
+      try {
+        await firebase.auth().signOut();
+        state.todos = [];
+        render();
+      } catch (err) {
+        showError(err.message || String(err));
+      }
+    });
+  } else {
+    updateAuthUI(null);
+  }
+
   refresh();
 });

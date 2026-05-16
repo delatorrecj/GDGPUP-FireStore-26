@@ -50,6 +50,19 @@
       </div>
     </header>
 
+    <section id="auth-section" class="container auth-section" style="margin-top:16px">
+      <div id="authPanel" class="auth-panel" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div id="userStatus" style="color:var(--muted);font-size:0.95rem">Not signed in</div>
+        <form id="loginForm" class="auth-form" style="display:flex;gap:8px;align-items:center">
+          <input id="emailInput" type="email" maxlength="200" placeholder="Email" aria-label="Email" />
+          <input id="passwordInput" type="password" maxlength="100" placeholder="Password" aria-label="Password" />
+          <button id="signInBtn" class="btn primary" type="submit">Sign in</button>
+          <button id="signUpBtn" class="btn ghost" type="button">Create account</button>
+          <button id="signOutBtn" class="btn ghost hidden" type="button">Sign out</button>
+        </form>
+      </div>
+    </section>
+
     <main>
       <section id="todo-app" class="container todo-app">
         <div class="todo-panel">
@@ -110,6 +123,9 @@
       </div>
     </footer>
 
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="firebase-config.js"></script>
     <script src="index.js"></script>
   </body>
 </html>

@@ -2,6 +2,7 @@
 import express from "express";
 import route from "./routes/route.js";
 import { initializeApp, cert } from "firebase-admin/app";
+import { getFirestore } from "firebase-admin/firestore";
 import fs from "fs";
 
 // Declaration && Initialization
@@ -11,7 +12,7 @@ const PORT = 3000;
 // Load the service account key
 const serviceAccount = JSON.parse(
   fs.readFileSync(
-    new URL("./sj-6-firestore-firebase-adminsdk-fbsvc-61e29fa849.json"),
+    new URL("./sj-6-firestore-firebase-adminsdk-fbsvc-61e29fa849.json", import.meta.url),
   ),
 );
 
