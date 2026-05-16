@@ -3,13 +3,20 @@ const state = { todos: [], filter: "all" };
 
 // --- Auth integration and API handling ---
 const authEnabled = typeof firebase !== "undefined" && window.FIREBASE_CONFIG;
+
 if (authEnabled) {
   try {
-    if (!firebase.apps || !firebase.apps.length) firebase.initializeApp(window.FIREBASE_CONFIG);
+    if (!firebase.apps || !firebase.apps.length) {
+      firebase.initializeApp(window.FIREBASE_CONFIG);
+      console.log("Firebase initialized");
+    }
   } catch (e) {
-    console.warn("Firebase init failed:", e);
+    console.error("Firebase init failed:", e);
   }
+} else {
+  console.warn("Firebase not configured. Check firebase-config.js and reload.");
 }
+
 
 async function getIdTokenForRequest() {
   if (authEnabled && firebase.auth().currentUser) {
@@ -128,13 +135,16 @@ function showError(msg) {
   const box = qs("#errorBox");
   if (!box) return;
   box.textContent = msg;
+  box.classList.remove("hidden");
   box.classList.add("show");
+  console.error("Error displayed:", msg);
 }
 function clearError() {
   const box = qs("#errorBox");
   if (!box) return;
   box.textContent = "";
   box.classList.remove("show");
+  box.classList.add("hidden");
 }
 
 function setFilter(next) {
@@ -335,20 +345,48 @@ document.addEventListener("DOMContentLoaded", () => {
   const signOutBtn = qs("#signOutBtn");
   const userStatus = qs("#userStatus");
 
+  console.log("Auth elements found:", {
+    loginForm: !!loginForm,
+    emailInput: !!emailInput,
+    passwordInput: !!passwordInput,
+    signUpBtn: !!signUpBtn,
+    signOutBtn: !!signOutBtn,
+    userStatus: !!userStatus,
+    authEnabled,
+  });
+
   function updateAuthUI(user) {
     if (user) {
       userStatus.textContent = `Signed in as ${user.email || user.uid}`;
       loginForm?.classList?.add("hidden");
       signOutBtn?.classList?.remove("hidden");
+      // Enable todo app for authenticated users
+      qs("#todoForm")?.classList?.remove("hidden");
+      qs("#todo-app")?.classList?.remove("hidden");
+      qs(".toolbar")?.classList?.remove("hidden");
+      qs("#todoList")?.classList?.remove("hidden");
+      qs(".todo-summary")?.classList?.remove("hidden");
     } else {
-      userStatus.textContent = authEnabled ? "Not signed in" : "No Firebase config (see firebase-config.js)";
+      if (authEnabled) {
+        userStatus.textContent = "Not signed in — Create account or log in to persist todos";
+      } else {
+        userStatus.textContent = "⚠️ Firebase not configured (see browser console)";
+      }
       loginForm?.classList?.remove("hidden");
       signOutBtn?.classList?.add("hidden");
+      // Disable todo input but keep list visible for anonymous users
+      const todoForm = qs("#todoForm");
+      if (todoForm) {
+        todoForm.style.opacity = authEnabled ? "1" : "0.5";
+        todoForm.style.pointerEvents = authEnabled ? "auto" : "none";
+      }
     }
   }
 
   if (authEnabled) {
+    console.log("Setting up Firebase auth listeners...");
     firebase.auth().onAuthStateChanged((user) => {
+      console.log("Auth state changed:", user?.email || "anonymous");
       updateAuthUI(user);
       // Clear anonymous localStorage when signing in/out
       localStorage.removeItem(ANON_STORAGE_KEY);
@@ -359,37 +397,85 @@ document.addEventListener("DOMContentLoaded", () => {
       ev.preventDefault();
       try {
         clearError();
-        const email = emailInput.value;
-        const pass = passwordInput.value;
+        const email = emailInput?.value || "";
+        const pass = passwordInput?.value || "";
+        console.log("Sign in attempt:", email);
+        if (!email || !pass) {
+          showError("Email and password are required");
+          return;
+        }
         await firebase.auth().signInWithEmailAndPassword(email, pass);
+        console.log("✓ Sign in successful:", email);
       } catch (err) {
-        showError(err.message || String(err));
+        console.error("Sign in error:", err.code, err.message);
+        if (err.code === "auth/configuration-not-found") {
+          showError("❌ Firebase Authentication not enabled. Enable it in Firebase Console → Build → Authentication → Email/Password");
+        } else if (err.code === "auth/user-not-found") {
+          console.warn("⚠️ User not found:", emailInput?.value);
+          showError("❌ No account found with this email. Click 'Create account' to sign up.");
+        } else if (err.code === "auth/wrong-password") {
+          console.warn("⚠️ Wrong password for:", emailInput?.value);
+          showError("❌ Incorrect password. Try again.");
+        } else if (err.code === "auth/invalid-email") {
+          showError("❌ Invalid email format.");
+        } else if (err.code === "auth/too-many-requests") {
+          showError("❌ Too many failed attempts. Try again later.");
+        } else {
+          showError(err.message || String(err));
+        }
       }
     });
 
     signUpBtn?.addEventListener("click", async () => {
       try {
         clearError();
-        const email = emailInput.value;
-        const pass = passwordInput.value;
+        const email = emailInput?.value || "";
+        const pass = passwordInput?.value || "";
+        console.log("Sign up attempt:", email);
+        if (!email || !pass) {
+          showError("Email and password are required");
+          return;
+        }
+        if (pass.length < 6) {
+          showError("Password must be at least 6 characters");
+          return;
+        }
         await firebase.auth().createUserWithEmailAndPassword(email, pass);
+        console.log("✓ Sign up successful:", email);
       } catch (err) {
-        showError(err.message || String(err));
+        console.error("Sign up error:", err.code, err.message);
+        if (err.code === "auth/configuration-not-found") {
+          showError("❌ Firebase Authentication not enabled. Enable it in Firebase Console → Build → Authentication → Email/Password");
+        } else if (err.code === "auth/email-already-in-use") {
+          console.warn("⚠️ Email already in use:", emailInput?.value);
+          showError("❌ Email already has an account. Try logging in instead.");
+        } else if (err.code === "auth/weak-password") {
+          showError("❌ Password is too weak. Use at least 6 characters.");
+        } else if (err.code === "auth/invalid-email") {
+          showError("❌ Invalid email format.");
+        } else {
+          showError(err.message || String(err));
+        }
       }
     });
 
     signOutBtn?.addEventListener("click", async () => {
       try {
+        console.log("Signing out...");
         await firebase.auth().signOut();
         state.todos = [];
         render();
+        console.log("Sign out successful");
       } catch (err) {
+        console.error("Sign out error:", err);
         showError(err.message || String(err));
       }
     });
   } else {
+    console.warn("Firebase auth not available - using anonymous mode only");
     updateAuthUI(null);
   }
 
   refresh();
 });
+
