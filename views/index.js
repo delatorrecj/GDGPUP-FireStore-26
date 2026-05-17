@@ -17,7 +17,6 @@ if (authEnabled) {
   console.warn("Firebase not configured. Check firebase-config.js and reload.");
 }
 
-
 async function getIdTokenForRequest() {
   if (authEnabled && firebase.auth().currentUser) {
     try {
@@ -368,9 +367,11 @@ document.addEventListener("DOMContentLoaded", () => {
       qs(".todo-summary")?.classList?.remove("hidden");
     } else {
       if (authEnabled) {
-        userStatus.textContent = "Not signed in — Create account or log in to persist todos";
+        userStatus.textContent =
+          "Not signed in — Create account or log in to persist todos";
       } else {
-        userStatus.textContent = "⚠️ Firebase not configured (see browser console)";
+        userStatus.textContent =
+          "⚠️ Firebase not configured (see browser console)";
       }
       loginForm?.classList?.remove("hidden");
       signOutBtn?.classList?.add("hidden");
@@ -382,7 +383,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   }
-
+  //?? Firebase Authenticated request
   if (authEnabled) {
     console.log("Setting up Firebase auth listeners...");
     firebase.auth().onAuthStateChanged((user) => {
@@ -409,10 +410,14 @@ document.addEventListener("DOMContentLoaded", () => {
       } catch (err) {
         console.error("Sign in error:", err.code, err.message);
         if (err.code === "auth/configuration-not-found") {
-          showError("❌ Firebase Authentication not enabled. Enable it in Firebase Console → Build → Authentication → Email/Password");
+          showError(
+            "❌ Firebase Authentication not enabled. Enable it in Firebase Console → Build → Authentication → Email/Password",
+          );
         } else if (err.code === "auth/user-not-found") {
           console.warn("⚠️ User not found:", emailInput?.value);
-          showError("❌ No account found with this email. Click 'Create account' to sign up.");
+          showError(
+            "❌ No account found with this email. Click 'Create account' to sign up.",
+          );
         } else if (err.code === "auth/wrong-password") {
           console.warn("⚠️ Wrong password for:", emailInput?.value);
           showError("❌ Incorrect password. Try again.");
@@ -445,7 +450,9 @@ document.addEventListener("DOMContentLoaded", () => {
       } catch (err) {
         console.error("Sign up error:", err.code, err.message);
         if (err.code === "auth/configuration-not-found") {
-          showError("❌ Firebase Authentication not enabled. Enable it in Firebase Console → Build → Authentication → Email/Password");
+          showError(
+            "❌ Firebase Authentication not enabled. Enable it in Firebase Console → Build → Authentication → Email/Password",
+          );
         } else if (err.code === "auth/email-already-in-use") {
           console.warn("⚠️ Email already in use:", emailInput?.value);
           showError("❌ Email already has an account. Try logging in instead.");
@@ -478,4 +485,3 @@ document.addEventListener("DOMContentLoaded", () => {
 
   refresh();
 });
-
